@@ -54,7 +54,16 @@ jobs:
         cluster_name: ${{ env.GKE_CLUSTER }}
         location: ${{ env.GKE_REGION }}
 
-    # 5. DockerイメージをビルドしてArtifact Registryにプッシュ
+# 5. Artifact Registryリポジトリが存在しない場合に作成
+    - name: Create Artifact Registry repository if it does not exist
+      run: |
+        gcloud artifacts repositories describe ${{ env.REPO_NAME }} --location=${{ env.GKE_REGION }} &> /dev/null || \
+        gcloud artifacts repositories create ${{ env.REPO_NAME }} \
+          --repository-format=docker \
+          --location=${{ env.GKE_REGION }} \
+          --description="Docker image repository for the application"
+
+    # 6. DockerイメージをビルドしてArtifact Registryにプッシュ
     - name: Build and Push Docker image
       run: |
         # Artifact Registryへの認証を設定
@@ -66,7 +75,7 @@ jobs:
         # Dockerイメージをプッシュ
         docker push ${{ env.GKE_REGION }}-docker.pkg.dev/${{ env.GCP_PROJECT_ID }}/${{ env.REPO_NAME }}/${{ env.IMAGE_NAME }}:${{ github.sha }}
 
-    # 6. Secret Managerから機密情報を取得してKubernetes Secretを作成
+    # 7. Secret Managerから機密情報を取得してKubernetes Secretを作成
     - name: Create/Update Kubernetes Secrets
       run: |
         # Secret Managerから値を取得
@@ -91,7 +100,7 @@ jobs:
           --from-literal=SECRET_KEY="$SECRET_KEY" \
           --dry-run=client -o yaml | kubectl apply -f -
 
-    # 7. KubernetesマニフェストをGKEにデプロイ
+    # 8. KubernetesマニフェストをGKEにデプロイ
     - name: Deploy to GKE
       run: |
         # デプロイメントファイル内のイメージパスを、今回ビルドしたイメージに置換
@@ -102,13 +111,13 @@ jobs:
         # マニフェストを適用
         kubectl apply -f k8s/
 
-    # 8. デプロイのロールアウト完了を待機
+    # 9. デプロイのロールアウト完了を待機
     - name: Wait for deployment rollout
       run: |
         echo "Waiting for deployment to be successful..."
         kubectl rollout status deployment/wiz-app-deployment --timeout=180s
 
-    # 9. ワークフローが失敗した場合にデバッグ情報を出力
+    # 10. ワークフローが失敗した場合にデバッグ情報を出力
     # このステップは、前のいずれかのステップが失敗した場合にのみ実行
     - name: Debug Pods on Failure
       if: failure()
