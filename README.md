@@ -31,4 +31,3 @@ Technical demo environment on GCP
     ├── gke.tf          # GKEクラスタ関連のリソース
     └── outputs.tf      # 出力値 (VMのIPアドレスなど)
 ```
-
