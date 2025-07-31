@@ -1,0 +1,43 @@
+# WebアプリケーションをデプロイするためのDeploymentリソースを定義
+
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: wiz-app-deployment
+spec:
+  replicas: 3
+  # このDeploymentが管理するPodを特定するためのラベルセレクター
+  selector:
+    matchLabels:
+      app: wiz-app
+  # Podのテンプレート定義
+  template:
+    metadata:
+      # 作成されるPodに 'app: wiz-app' というラベルを付与
+      # これはServiceがトラフィックを転送する対象を見つけるために使う
+      labels:
+        app: wiz-app
+    spec:
+      # ★★★ 要件: クラスタ全体の管理者権限を付与 ★★★
+      # 01-rbac.yamlで作成するServiceAccountを指定します。
+      # これにより、このPodはクラスタ管理者権限で動作します。
+      serviceAccountName: cluster-admin-sa
+      containers:
+      - name: wiz-app
+        # CI/CDパイプラインで置換されるイメージのプレースホルダー 
+        # GitHub Actionsのワークフローが、ビルドしたDockerイメージの正式なパスにこの値を動的に書き換え
+        image: __IMAGE_PLACEHOLDER__
+        # アプリケーションがコンテナ内でリッスンするポート
+        ports:
+        - containerPort: 8080
+        env:
+        - name: MONGODB_URI
+          valueFrom:
+            secretKeyRef:
+              name: wiz-app-secrets
+              key: MONGODB_URI
+        - name: SECRET_KEY
+          valueFrom:
+            secretKeyRef:
+              name: wiz-app-secrets
+              key: SECRET_KEY

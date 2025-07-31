@@ -1,0 +1,19 @@
+# Webアプリケーションを外部に公開するためのLoadBalancer Serviceを定義
+apiVersion: v1
+kind: Service
+metadata:
+  name: wiz-app-service
+spec:
+  # このServiceを外部からアクセス可能なロードバランサーとして公開
+  # GKEは自動的にGoogle Cloud Load Balancerを作成
+  type: LoadBalancer
+  # このServiceがトラフィックを転送する対象のPodを選択
+  # 'app: wiz-app' ラベルを持つPodが対象
+  selector:
+    app: wiz-app
+  ports:
+    - protocol: TCP
+      # ロードバランサーがリッスンするポート
+      port: 80
+      # Pod内のコンテナがリッスンするポート
+      targetPort: 8080
