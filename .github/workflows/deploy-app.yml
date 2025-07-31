@@ -9,7 +9,7 @@ on:
       - main
     paths:
       - 'app/**'
-      - '.github/workflows/deploy-app.yml' # ワークフロー自体の変更でもトリガー
+      - '.github/workflows/deploy-app.yml'
   workflow_dispatch:
 
 # ワークフロー全体で使用する環境変数を定義

@@ -1,6 +1,6 @@
 # .github/workflows/terraform-ci-cd.yml
 
-name: 'Terraform CI/CD'
+name: 'Terraform'
 
 on:
   push:
@@ -8,7 +8,7 @@ on:
       - main
     paths:
       - 'terraform/**'
-      - '.github/workflows/terraform-ci-cd.yml' # このワークフロー自体の変更でもトリガー
+      - '.github/workflows/terraform.yml'
   workflow_dispatch:
 
 jobs:
