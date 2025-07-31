@@ -94,7 +94,7 @@ cat <<EOT | sudo tee /usr/local/bin/backup-mongo.sh
 BACKUP_DIR="/var/backups/mongodb"
 TIMESTAMP=\$(date +"%Y%m%d%H%M")
 BACKUP_NAME="mongodb-backup-\$TIMESTAMP"
-BUCKET_NAME="techdemo-01-db-backups"
+BUCKET_NAME="clgcporg10-169-db-backups"
 
 mkdir -p \$BACKUP_DIR
 mongodump --out \$BACKUP_DIR/\$BACKUP_NAME --authenticationDatabase admin -u "${MONGO_USER}" -p "${MONGO_PASS}"

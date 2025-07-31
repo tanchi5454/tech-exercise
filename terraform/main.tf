@@ -10,7 +10,7 @@ terraform {
 
   # ★★★ Terraformの状態を管理する事前作成GCSバケットを指定 ★★★
   backend "gcs" {
-    bucket = "techdemo-01-terraform-state" 
+    bucket = "clgcporg10-169-terraform-state" 
     prefix = "terraform/state"
   }
 }
@@ -22,13 +22,13 @@ provider "google" {
 }
 
 # ★★★事前作成GitHub Actions用サービスアカウントのIAM設定 ★★★
-data "google_service_account" "github_actions_sa" {
-  account_id = "github-actions-sa"
+data "google_service_account" "iac_operations_sa" {
+  account_id = "iac-operations-sa"
 }
 
 # GitHub Actions用サービスアカウントのIAMロールの定義と付与 
 locals {
-  github_actions_roles = toset([
+  iac_operations_roles = toset([
     "roles/storage.objectViewer",
     "roles/secretmanager.secretAccessor",
     "roles/container.developer",
@@ -37,12 +37,12 @@ locals {
 }
 
 # for_eachを使い、GitHub Actions用サービスアカウントにロールを付与
-resource "google_project_iam_member" "github_actions_roles" {
-  for_each = local.github_actions_roles
+resource "google_project_iam_member" "iac_operations_roles" {
+  for_each = local.iac_operations_roles
 
   project = var.project_id
   role    = each.value
-  member  = "serviceAccount:${data.google_service_account.github_actions_sa.email}"
+  member  = "serviceAccount:${data.google_service_account.iac_operations_sa.email}"
 }
 
 # --- MongoDB VM用サービスアカウントのIAM設定 ---
