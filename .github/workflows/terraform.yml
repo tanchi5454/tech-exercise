@@ -1,3 +1,5 @@
+# .github/workflows/terraform-ci-cd.yml
+
 name: 'Terraform CI/CD'
 
 on:
@@ -6,18 +8,30 @@ on:
       - main
     paths:
       - 'terraform/**'
+      - '.github/workflows/terraform-ci-cd.yml' # このワークフロー自体の変更でもトリガー
+  workflow_dispatch:
 
 jobs:
   terraform:
+    name: 'Terraform Plan and Apply'
     runs-on: ubuntu-latest
+
+    # Workload Identity連携に必要な権限を追記
+    permissions:
+      contents: 'read'
+      id-token: 'write'
+
     steps:
       - name: Checkout code
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
 
+      # Workload Identity連携で認証
       - name: Authenticate to Google Cloud
+        id: 'auth'
         uses: 'google-github-actions/auth@v2'
         with:
-          credentials_json: '${{ secrets.GCP_SA_KEY }}'
+          workload_identity_provider: ${{ secrets.GCP_WORKLOAD_IDENTITY_PROVIDER }}
+          service_account: ${{ secrets.GCP_SERVICE_ACCOUNT }}
 
       - name: Set up Terraform
         uses: hashicorp/setup-terraform@v2
@@ -26,6 +40,14 @@ jobs:
         run: terraform init
         working-directory: ./terraform
 
+      - name: Terraform Plan
+        id: plan
+        run: terraform plan -no-color -var="project_id=${{ secrets.GCP_PROJECT_ID }}"
+        working-directory: ./terraform
+        continue-on-error: true # planに差分がなくても後続処理を続けるため
+
       - name: Terraform Apply
+        # mainブランチへのpushで、かつplanに差分があった場合のみApplyを実行
+        if: github.ref == 'refs/heads/main' && steps.plan.outcome == 'success'
         run: terraform apply -auto-approve -var="project_id=${{ secrets.GCP_PROJECT_ID }}"
         working-directory: ./terraform
