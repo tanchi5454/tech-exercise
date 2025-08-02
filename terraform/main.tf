@@ -162,17 +162,23 @@ resource "google_compute_firewall" "allow_mongo_external" {
 
 # --- DBバックアップ用のGCSバケット ---
 
-# インターネット非公開、特定のサービスアカウントのみがアクセス
 resource "google_storage_bucket" "db_backups" {
   name          = "${var.project_id}-db-backups"
   location      = var.region
-  force_destroy = true // デモ環境のクリーンアップを容易する
+  force_destroy = true // デモ環境のクリーンアップを容易にするため
 
   # バケット内の全オブジェクトに対して均一なアクセス制御を強制
   uniform_bucket_level_access = true
 }
 
-# MongoDB VMのサービスアカウントのみバケットへのオブジェクト管理権限を付与
+# すべてのユーザー(allUsers)に対して、オブジェクトの閲覧と一覧表示の権限を付与
+resource "google_storage_bucket_iam_member" "public_reader" {
+  bucket = google_storage_bucket.db_backups.name
+  role   = "roles/storage.objectViewer"
+  member = "allUsers"
+}
+
+# MongoDB VMのサービスアカウントにバケットへの書き込み権限を付与
 resource "google_storage_bucket_iam_member" "db_backup_writer" {
   bucket = google_storage_bucket.db_backups.name
   role   = "roles/storage.objectAdmin"
