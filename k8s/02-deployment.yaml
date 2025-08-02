@@ -19,8 +19,8 @@ spec:
         app: wiz-app
     spec:
       # ★★★ 要件: クラスタ全体の管理者権限を付与 ★★★
-      # 01-rbac.yamlで作成するServiceAccountを指定します。
-      # これにより、このPodはクラスタ管理者権限で動作します。
+      # 01-rbac.yamlで作成するServiceAccountを指定
+      # これにより、このPodはクラスタ管理者権限で動作
       serviceAccountName: cluster-admin-sa
       containers:
       - name: wiz-app
